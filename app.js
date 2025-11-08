@@ -1,6 +1,7 @@
 // server/src/app.js
 require('dotenv').config();
 const express = require('express');
+const cors = require("cors");
 const cookieParser = require('cookie-parser');
 const connectDB = require('./util/db'); // your existing db connector
 const ensureAdmin = require('./boot/ensureAdmin');
@@ -9,6 +10,8 @@ const employeeRoute = require('./router/employee-route');
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
+app.use(cors());
 
 // connect DB then ensure single admin
 connectDB();
