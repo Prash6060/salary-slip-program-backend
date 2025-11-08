@@ -1,24 +1,29 @@
-// app.js
+// server/src/app.js
 require('dotenv').config();
 const express = require('express');
-const connectDB = require('./util/db');
+const cookieParser = require('cookie-parser');
+const connectDB = require('./util/db'); // your existing db connector
+const ensureAdmin = require('./boot/ensureAdmin');
 
 const app = express();
+app.use(express.json());
+app.use(cookieParser());
 
-// connect database first
+// connect DB then ensure single admin
 connectDB();
-
-// middlewares
-app.use(express.json()); // so you can parse JSON body later
+ensureAdmin().catch(console.error);
 
 // routes
-app.get('/', (req, res) => {
-  res.status(200).send('Hello World');
+app.use('/api/auth', require('./router/auth-route'));
+
+// health
+app.get('/api/health', (_, res) => res.json({ ok: true }));
+
+// error handler
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ message: 'Server error' });
 });
 
-// port (never hardcode)
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+module.exports = app;
