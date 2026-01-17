@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./util/db'); // your existing db connector
 const ensureAdmin = require('./boot/ensureAdmin');
 const employeeRoute = require('./router/employee-route');
+const slipRoute = require('./router/slip-route');
 
 const app = express();
 app.use(express.json());
@@ -20,6 +21,7 @@ ensureAdmin().catch(console.error);
 // routes
 app.use('/api/auth', require('./router/auth-route'));
 app.use('/api/employee', require('./router/employee-route'));
+app.use('/api/slip', require('./router/slip-route'));
 
 // health
 app.get('/api/health', (_, res) => res.json({ ok: true }));
