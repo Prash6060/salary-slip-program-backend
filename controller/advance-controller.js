@@ -65,3 +65,22 @@ exports.AddAdvance = async (req, res) => {
     });
   }
 };
+
+exports.ListAdvance = async (req, res) => {
+  try {
+    const advances = await Advance.find()
+      .sort({ createdAt: -1 }); // latest first
+
+    res.status(200).json({
+      msg: "Advance list fetched successfully",
+      count: advances.length,
+      data: advances,
+    });
+  } catch (err) {
+    console.error("ListAdvance error:", err);
+    res.status(500).json({
+      msg: "Failed to fetch advance list",
+      error: err.message,
+    });
+  }
+};
