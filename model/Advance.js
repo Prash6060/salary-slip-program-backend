@@ -22,15 +22,24 @@ const AdvanceSchema = new Schema(
           `${props.value} is not a valid date format. Use dd-mm-yyyy.`,
       },
     },
-    advanceAmount: { type: Number, required: true, min: 0 },
+    advanceAmount: { type: Number, required: true },
     approvedBy: {
       type: String,
       required: true,
-      enum: ["Mahendra Gulechha", "Rajendra Gulechha", "Vinod Gulechha"],
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return (
+            ["Mahendra Gulechha", "Rajendra Gulechha", "Vinod Gulechha"].includes(v) ||
+            v.startsWith("Payslip")
+          );
+        },
+        message: (props) =>
+          `${props.value} is not a valid approvedBy value`,
+      },
     },
-    generatedAt: { type: String, required: true }, // timestamp from frontend
-  },
-  { timestamps: true }
+  }, 
+    { timestamps: true } 
 );
 
 // Normalize employee name before saving

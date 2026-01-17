@@ -3,68 +3,106 @@ const { Schema } = mongoose;
 
 const PayslipSchema = new Schema(
   {
-    payslipCode: { type: String, unique: true }, // PS1, PS2...
+    payslipCode: {
+      type: String,
+      unique: true,
+    },
 
-    employeeName: { type: String, required: true, trim: true },
-    employeeCode: { type: String, required: true, trim: true }, // NOW REQUIRED
+    employeeName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-    monthYear: {
-      type: String, // format: "MM-YYYY"
+    employeeCode: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    month: {
+      type: String, // YYYY-MM
       required: true,
       trim: true,
       validate: {
         validator: function (v) {
-          // Validate MM-YYYY format
-          return /^(0[1-9]|1[0-2])-(\d{4})$/.test(v);
+          return /^\d{4}-(0[1-9]|1[0-2])$/.test(v);
         },
         message: (props) =>
-          `${props.value} is not a valid monthYear! Use MM-YYYY format.`,
+          `${props.value} is not a valid month format. Use YYYY-MM.`,
       },
     },
 
-    workingUnit: { type: String, required: true, trim: true },
+    workingUnit: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-    daysPresent: { type: Number, required: true, min: 0 },
-    wagePerDay: { type: Number, required: true, min: 0 },
+    daysPresent: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
 
-    hasAdvance: { type: Boolean, default: false },
-    advanceAmount: { type: Number, default: 0, min: 0 },
+    wagePerDay: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
 
-    totalPay: { type: Number, required: true, min: 0 },
+    salaryPayout: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
 
-    generatedAt: { type: String, required: true }, // frontend timestamp
+    hasAdvance: {
+      type: Boolean,
+      default: false,
+    },
+
+    pendingAdvance: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+
+    setOffAdvance: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+
+    finalPayout: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    generatedAt: {
+      type: String,
+      required: true, // frontend timestamp
+    },
   },
   { timestamps: true }
 );
 
-// Normalize employee name
+/* ---------------- NORMALIZE EMPLOYEE NAME & CODE ---------------- */
 PayslipSchema.pre("save", function (next) {
-  if (this.employeeName) {
-    this.employeeName = this.employeeName.toUpperCase().trim();
+  if (this.employeeName) this.employeeName = this.employeeName.toUpperCase().trim();
+  if (this.employeeCode) this.employeeCode = this.employeeCode.toUpperCase().trim();
+
+  // GENERATE payslipCode if not already set
+  if (!this.payslipCode) {
+    // Synchronous timestamp-based code (safe)
+    this.payslipCode = `PS-${Date.now()}`; // e.g., PS-1671234567890
   }
+
   next();
 });
 
-// Generate payslipCode (PS1, PS2...)
-PayslipSchema.pre("save", async function (next) {
-  try {
-    if (!this.isNew) return next();
-
-    const Payslip = mongoose.model("Payslip");
-    const count = await Payslip.countDocuments({});
-
-    this.payslipCode = `PS${count + 1}`;
-
-    next();
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Prevent duplicate payslip for same employee + monthYear
-PayslipSchema.index(
-  { employeeName: 1, monthYear: 1 },
-  { unique: true }
-);
+/* ---------------- UNIQUE PAYSLIP PER EMPLOYEE + MONTH ---------------- */
+PayslipSchema.index({ employeeCode: 1, month: 1 }, { unique: true });
 
 module.exports = mongoose.model("Payslip", PayslipSchema);
