@@ -1,5 +1,6 @@
 // controller/advance-controller.js
 const Advance = require("../model/Advance");
+const Employee = require("../model/Employee"); // make sure you have this model
 
 exports.AddAdvance = async (req, res) => {
   try {
@@ -38,8 +39,15 @@ exports.AddAdvance = async (req, res) => {
     // Save to DB
     const savedAdvance = await newAdvance.save();
 
+    // Update employee's activeAdvance field to true
+    const employee = await Employee.findOne({ employeeCode });
+    if (employee) {
+      employee.activeAdvance = true;
+      await employee.save();
+    }
+
     res.status(201).json({
-      msg: "Advance added successfully",
+      msg: "Advance added successfully and employee marked activeAdvance",
       data: savedAdvance,
     });
   } catch (err) {
